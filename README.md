@@ -27,6 +27,10 @@ You can install this library manually:
 ## 📸 Picture of the CV7-OEM
 ![image](https://github.com/user-attachments/assets/7203b2c0-4070-418b-9fb2-59beb2d94665)
 
+## ⚡ Wiring Diagram
+To connect the CV7 anemometer to the ESP32-LoRaWAN board, an **optocoupler (PC817)** is used for safe and reliable data reading.  
+![image](https://github.com/user-attachments/assets/f0e3cf0a-72d0-4940-bd3d-a9b86558a56d)
+
 
 ## 🔌 Usage
 
