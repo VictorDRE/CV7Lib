@@ -24,6 +24,9 @@ You can install this library manually:
 (Once accepted, it will also be installable via the Arduino Library Manager.)
 
 ---
+## 📸 Picture of the CV7-OEM
+![image](https://github.com/user-attachments/assets/7203b2c0-4070-418b-9fb2-59beb2d94665)
+
 
 ## 🔌 Usage
 
