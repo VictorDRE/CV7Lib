@@ -14,7 +14,8 @@ CV7Lib is a lightweight Arduino library for reading wind speed, wind direction, 
 
 Wiring example between the CV7-OEM and an ESP32:
 
-![CV7 wiring](docs/cv7-oem-connection.png)
+![image](https://github.com/user-attachments/assets/1e50244d-23dc-46f2-b316-a16dfaf5183b)
+
 
 - CV7 TX → ESP32 RX (e.g. GPIO 16)
 - CV7 GND → ESP32 GND
