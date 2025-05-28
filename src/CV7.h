@@ -6,55 +6,55 @@
 
 /**
  * @brief CV7 anemometer class for measuring wind speed, direction, and temperature.
- * This class is specifically designed to interface with the CV7-OEM sensor using NMEA sentences.
+ * This class interfaces with the CV7-OEM sensor via NMEA sentences.
  */
 class CV7 {
 public:
     /**
-     * @brief Constructor with RX pin for serial communication.
+     * @brief Constructor with specified RX pin.
      * @param rxPin Serial RX pin connected to the CV7-OEM.
      */
     explicit CV7(int rxPin);
 
     /**
-     * @brief Initializes serial communication and debug interface.
+     * @brief Initializes serial communication and debug output.
      */
     void initialize();
 
     /**
-     * @brief Reads and parses a frame from the CV7 anemometer.
-     * It handles both $IIMWV (wind) and $WIXDR (temperature) NMEA frames.
+     * @brief Reads and parses a full NMEA frame from Serial1.
+     * Handles both $IIMWV (wind) and $WIXDR (temperature) frames.
      */
     void readFrame();
 
     /**
-     * @brief Returns the latest temperature (in °C).
+     * @brief Returns the current median temperature in °C.
      */
     float getTemperature() const;
 
     /**
-     * @brief Returns the latest wind speed (in km/h).
+     * @brief Returns the current median wind speed in km/h.
      */
     float getWindSpeed() const;
 
     /**
-     * @brief Returns the latest wind direction (in degrees).
+     * @brief Returns the most recent wind direction in degrees.
      */
     float getWindDirection() const;
 
 private:
-    int _rxPin;
-    float temperature = 0.0;
-    float windSpeed = 0.0;
-    float windDirection = 0.0;
+    int _rxPin;                                ///< RX pin used for communication
+    float _temperature = 0.0f;                 ///< Median temperature
+    float _windSpeed = 0.0f;                   ///< Median wind speed
+    float _windDirection = 0.0f;               ///< Last wind direction
 
-    float lastSpeeds[10] = {0.0};
-    int speedIndex = 0;
+    float _speedBuffer[10] = {0.0f};           ///< Last 10 wind speeds
+    int _speedIndex = 0;                       ///< Circular index for wind speed
 
-    float lastTemps[10] = {0.0};
-    int tempIndex = 0;
+    float _tempBuffer[10] = {0.0f};            ///< Last 10 temperature readings
+    int _tempIndex = 0;                        ///< Circular index for temperature
 
-    float newTemp = 0.0;
+    float _rawTemp = 0.0f;                     ///< Temporary variable to store raw temperature
 };
 
 #endif // CV7_H
