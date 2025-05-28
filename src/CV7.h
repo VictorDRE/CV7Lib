@@ -2,6 +2,7 @@
 #define CV7_H
 
 #include <Arduino.h>
+#include <algorithm>
 
 /**
  * @brief CV7 anemometer class for measuring wind speed, direction, and temperature.
@@ -27,8 +28,7 @@ public:
     void readFrame();
 
     /**
-     * @brief Returns the corrected temperature (in °C).
-     * The correction applied is -6°C as per sensor calibration.
+     * @brief Returns the latest temperature (in °C).
      */
     float getTemperature() const;
 
@@ -42,19 +42,19 @@ public:
      */
     float getWindDirection() const;
 
-    /**
-     * @brief Calculates the median of the last 3 wind speed readings.
-     * This improves stability by reducing the effect of outliers.
-     */
-    float getMedianWindSpeed() const;
-
 private:
-    int _rxPin;                        // Pin used to receive NMEA sentences
-    float temperature = 0.0;          // Current raw temperature value
-    float windSpeed = 0.0;            // Current wind speed in km/h
-    float windDirection = 0.0;        // Current wind direction in degrees
-    float lastSpeeds[3] = {0.0, 0.0, 0.0}; // Circular buffer of last 3 wind speeds
-    int speedIndex = 0;               // Index for inserting next speed value
+    int _rxPin;
+    float temperature = 0.0;
+    float windSpeed = 0.0;
+    float windDirection = 0.0;
+
+    float lastSpeeds[10] = {0.0};
+    int speedIndex = 0;
+
+    float lastTemps[10] = {0.0};
+    int tempIndex = 0;
+
+    float newTemp = 0.0;
 };
 
 #endif // CV7_H
