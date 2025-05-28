@@ -22,6 +22,7 @@ void CV7::readFrame() {
     if (Serial1.available()) {
         String frame = Serial1.readStringUntil('\n');
         frame.trim();  // Clean whitespace
+        Serial.println("[CV7] Trame brute: " + frame);
 
         // Parse wind data from $IIMWV frame
         if (frame.startsWith("$IIMWV")) {
@@ -29,27 +30,37 @@ void CV7::readFrame() {
             sscanf(frame.c_str(), "$IIMWV,%f,R,%f,N,A", &windDirection, &newWindSpeed);
             newWindSpeed *= 3.6;  // Convert m/s to km/h
 
-            // Store in circular buffer
             lastSpeeds[speedIndex] = newWindSpeed;
-            speedIndex = (speedIndex + 1) % 3;
+            speedIndex = (speedIndex + 1) % 10;
 
-            windSpeed = newWindSpeed;
+            float sortedSpeeds[10];
+            memcpy(sortedSpeeds, lastSpeeds, sizeof(lastSpeeds));
+            std::sort(sortedSpeeds, sortedSpeeds + 10);
+            windSpeed = sortedSpeeds[5];  // Médiane
 
             Serial.printf("[CV7] Wind Speed = %.2f km/h, Wind Direction = %.2f°\n", windSpeed, windDirection);
         }
         // Parse temperature data from $WIXDR frame
         else if (frame.startsWith("$WIXDR")) {
-            sscanf(frame.c_str(), "$WIXDR,C,%f,C", &temperature);
-            Serial.printf("[CV7] Temperature = %.2f°C\n", temperature - 6.0);  // Apply calibration
+            sscanf(frame.c_str(), "$WIXDR,C,%f,C", &newTemp);
+            lastTemps[tempIndex] = newTemp;
+            tempIndex = (tempIndex + 1) % 10;
+
+            float sortedTemps[10];
+            memcpy(sortedTemps, lastTemps, sizeof(lastTemps));
+            std::sort(sortedTemps, sortedTemps + 10);
+            temperature = sortedTemps[5];  // Médiane
+
+            Serial.printf("[CV7] Temperature = %.2f°C\n", temperature);
         }
     }
 }
 
 /**
- * @brief Returns the calibrated temperature.
+ * @brief Returns the latest temperature.
  */
 float CV7::getTemperature() const {
-    return temperature - 6.0;
+    return temperature;
 }
 
 /**
@@ -64,24 +75,4 @@ float CV7::getWindSpeed() const {
  */
 float CV7::getWindDirection() const {
     return windDirection;
-}
-
-/**
- * @brief Returns the median of the last 3 wind speed measurements.
- */
-float CV7::getMedianWindSpeed() const {
-    float sortedValues[3] = {lastSpeeds[0], lastSpeeds[1], lastSpeeds[2]};
-
-    // Simple bubble sort for 3 values
-    for (int i = 0; i < 2; i++) {
-        for (int j = i + 1; j < 3; j++) {
-            if (sortedValues[i] > sortedValues[j]) {
-                float temp = sortedValues[i];
-                sortedValues[i] = sortedValues[j];
-                sortedValues[j] = temp;
-            }
-        }
-    }
-
-    return sortedValues[1];  // Middle value is median
 }
