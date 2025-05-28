@@ -1,21 +1,26 @@
-#include <CV7.h>  // Include the CV7 anemometer library
+#include <CV7.h>
 
-#define RX_PIN 16  // RX pin connected to the CV7-OEM
-
+#define RX_PIN 16
 CV7 sensor(RX_PIN);
 
+/**
+ * @brief Initializes the sensor and debug serial port.
+ */
 void setup() {
-    Serial.begin(115200);    // Start the serial monitor
-    sensor.initialize();     // Initialize CV7 (Serial1 + debug)
+    Serial.begin(115200);
+    sensor.initialize();
 }
 
+/**
+ * @brief Periodically reads sensor data and displays it.
+ */
 void loop() {
-    sensor.readFrame();  // Read one frame
+    sensor.readFrame();
 
-    Serial.printf("Temperature: %.2f°C\n", sensor.getTemperature());
-    Serial.printf("Wind Speed: %.2f km/h\n", sensor.getWindSpeed());
-    Serial.printf("Wind Direction: %.2f°\n", sensor.getWindDirection());
-    Serial.println("----------------------------------------");
+    Serial.printf("Temperature   : %.2f °C\n", sensor.getTemperature());
+    Serial.printf("Wind Speed    : %.2f km/h\n", sensor.getWindSpeed());
+    Serial.printf("Wind Direction: %.2f °\n", sensor.getWindDirection());
+    Serial.println("--------------------------------------------------");
 
-    delay(2000);  // Wait before reading next frame
+    delay(2000);
 }
