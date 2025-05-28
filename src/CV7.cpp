@@ -1,78 +1,88 @@
 #include "CV7.h"
 
 /**
- * @brief Constructor. Initializes serial communication on the given RX pin.
+ * @brief Constructor. Sets up Serial1 with the provided RX pin.
  */
 CV7::CV7(int rxPin) : _rxPin(rxPin) {
-    Serial1.begin(4800, SERIAL_8N1, _rxPin);  // Set up Serial1 with correct settings for CV7
+    Serial1.begin(4800, SERIAL_8N1, _rxPin);
 }
 
 /**
- * @brief Sets up debugging serial and prints initialization message.
+ * @brief Initializes the debug Serial port and prints startup message.
  */
 void CV7::initialize() {
-    Serial.begin(115200);  // Main debug serial
+    Serial.begin(115200);
     Serial.println("[CV7] Initialization completed.");
 }
 
 /**
- * @brief Reads a line from Serial1 and parses wind or temperature data.
+ * @brief Reads incoming data character by character, parses NMEA frames,
+ *        and updates wind/temperature data using a median of the last 10 values.
  */
 void CV7::readFrame() {
-    if (Serial1.available()) {
-        String frame = Serial1.readStringUntil('\n');
-        frame.trim();  // Clean whitespace
-        Serial.println("[CV7] Trame brute: " + frame);
+    static String buffer = "";
 
-        // Parse wind data from $IIMWV frame
-        if (frame.startsWith("$IIMWV")) {
-            float newWindSpeed;
-            sscanf(frame.c_str(), "$IIMWV,%f,R,%f,N,A", &windDirection, &newWindSpeed);
-            newWindSpeed *= 3.6;  // Convert m/s to km/h
+    while (Serial1.available()) {
+        char c = Serial1.read();
 
-            lastSpeeds[speedIndex] = newWindSpeed;
-            speedIndex = (speedIndex + 1) % 10;
+        if (c == '\n') {
+            buffer.trim();
+            Serial.println("[CV7] Raw Frame: " + buffer);
 
-            float sortedSpeeds[10];
-            memcpy(sortedSpeeds, lastSpeeds, sizeof(lastSpeeds));
-            std::sort(sortedSpeeds, sortedSpeeds + 10);
-            windSpeed = sortedSpeeds[5];  // Médiane
+            if (buffer.startsWith("$IIMWV")) {
+                float newWindSpeed;
+                sscanf(buffer.c_str(), "$IIMWV,%f,R,%f,N,A", &_windDirection, &newWindSpeed);
+                newWindSpeed *= 3.6f;  // Convert m/s to km/h
 
-            Serial.printf("[CV7] Wind Speed = %.2f km/h, Wind Direction = %.2f°\n", windSpeed, windDirection);
+                _speedBuffer[_speedIndex] = newWindSpeed;
+                _speedIndex = (_speedIndex + 1) % 10;
+
+                float sorted[10];
+                memcpy(sorted, _speedBuffer, sizeof(_speedBuffer));
+                std::sort(sorted, sorted + 10);
+                _windSpeed = sorted[5];
+
+                Serial.printf("[CV7] Wind Speed = %.2f km/h | Wind Direction = %.2f°\n", _windSpeed, _windDirection);
+            }
+            else if (buffer.startsWith("$WIXDR")) {
+                sscanf(buffer.c_str(), "$WIXDR,C,%f,C", &_rawTemp);
+                _tempBuffer[_tempIndex] = _rawTemp;
+                _tempIndex = (_tempIndex + 1) % 10;
+
+                float sorted[10];
+                memcpy(sorted, _tempBuffer, sizeof(_tempBuffer));
+                std::sort(sorted, sorted + 10);
+                _temperature = sorted[5];
+
+                Serial.printf("[CV7] Temperature = %.2f°C\n", _temperature);
+            }
+
+            buffer = "";  // Clear buffer for next frame
         }
-        // Parse temperature data from $WIXDR frame
-        else if (frame.startsWith("$WIXDR")) {
-            sscanf(frame.c_str(), "$WIXDR,C,%f,C", &newTemp);
-            lastTemps[tempIndex] = newTemp;
-            tempIndex = (tempIndex + 1) % 10;
-
-            float sortedTemps[10];
-            memcpy(sortedTemps, lastTemps, sizeof(lastTemps));
-            std::sort(sortedTemps, sortedTemps + 10);
-            temperature = sortedTemps[5];  // Médiane
-
-            Serial.printf("[CV7] Temperature = %.2f°C\n", temperature);
+        else {
+            buffer += c;
+            if (buffer.length() > 120) buffer = "";  // Safety flush on overflow
         }
     }
 }
 
 /**
- * @brief Returns the latest temperature.
+ * @brief Returns the current median temperature.
  */
 float CV7::getTemperature() const {
-    return temperature;
+    return _temperature;
 }
 
 /**
- * @brief Returns the latest wind speed.
+ * @brief Returns the current median wind speed.
  */
 float CV7::getWindSpeed() const {
-    return windSpeed;
+    return _windSpeed;
 }
 
 /**
- * @brief Returns the latest wind direction.
+ * @brief Returns the most recent wind direction.
  */
 float CV7::getWindDirection() const {
-    return windDirection;
+    return _windDirection;
 }
