@@ -2,38 +2,37 @@
 #define CV7_H
 
 #include <Arduino.h>
-#include <algorithm>
 
 /**
  * @brief CV7 anemometer class for measuring wind speed, direction, and temperature.
- * This class interfaces with the CV7-OEM sensor via NMEA sentences.
+ * This class is designed to interface with the CV7-OEM sensor using NMEA sentences.
  */
 class CV7 {
 public:
     /**
-     * @brief Constructor with specified RX pin.
-     * @param rxPin Serial RX pin connected to the CV7-OEM.
+     * @brief Constructor with RX pin for serial communication.
+     * @param rxPin Serial RX pin connected to the CV7-OEM output.
      */
     explicit CV7(int rxPin);
 
     /**
-     * @brief Initializes serial communication and debug output.
+     * @brief Initializes serial communication and debug interface.
      */
     void initialize();
 
     /**
-     * @brief Reads and parses a full NMEA frame from Serial1.
-     * Handles both $IIMWV (wind) and $WIXDR (temperature) frames.
+     * @brief Reads and parses a frame from the CV7 anemometer.
+     * Supports both $IIMWV (wind) and $WIXDR (temperature) NMEA frames.
      */
     void readFrame();
 
     /**
-     * @brief Returns the current median temperature in °C.
+     * @brief Returns the current measured temperature in °C.
      */
     float getTemperature() const;
 
     /**
-     * @brief Returns the current median wind speed in km/h.
+     * @brief Returns the most recent wind speed in km/h.
      */
     float getWindSpeed() const;
 
@@ -42,19 +41,19 @@ public:
      */
     float getWindDirection() const;
 
+    /**
+     * @brief Calculates the median of the last 10 wind speed readings.
+     * Helps smooth out measurements and reduce the effect of outliers.
+     */
+    float getMedianWindSpeed() const;
+
 private:
-    int _rxPin;                                ///< RX pin used for communication
-    float _temperature = 0.0f;                 ///< Median temperature
-    float _windSpeed = 0.0f;                   ///< Median wind speed
-    float _windDirection = 0.0f;               ///< Last wind direction
-
-    float _speedBuffer[10] = {0.0f};           ///< Last 10 wind speeds
-    int _speedIndex = 0;                       ///< Circular index for wind speed
-
-    float _tempBuffer[10] = {0.0f};            ///< Last 10 temperature readings
-    int _tempIndex = 0;                        ///< Circular index for temperature
-
-    float _rawTemp = 0.0f;                     ///< Temporary variable to store raw temperature
+    int _rxPin;                        // RX pin used to receive NMEA sentences
+    float temperature = 0.0f;          // Last measured temperature in °C
+    float windSpeed = 0.0f;            // Last measured wind speed in km/h
+    float windDirection = 0.0f;        // Last measured wind direction in degrees
+    float lastSpeeds[10] = {0.0f};     // Circular buffer of the last 10 wind speed readings
+    int speedIndex = 0;                // Index for the circular wind speed buffer
 };
 
 #endif // CV7_H
