@@ -7,7 +7,7 @@ CV7Lib is a lightweight Arduino library for reading wind speed, wind direction, 
 1. Download or clone this repository.
 2. Copy the `CV7Lib` folder into your Arduino `libraries` directory.
 3. Restart the Arduino IDE.
-4. Open: `File > Examples > CV7Lib > CV7_Test`
+4. Open: `File > Examples > CV7Lib > BasicUsage.ino`
 5. Upload to your ESP32 or other compatible board.
 
 ## Wiring
